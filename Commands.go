@@ -2,10 +2,15 @@ package main
 
 import (
 	Core "MrMcBaker/Core"
+	"bufio"
+	"errors"
 	"fmt"
-	"github.com/bwmarrin/discordgo"
+	"io"
 	"os"
+	"os/exec"
 	"strconv"
+	"encoding/binary"
+	"github.com/bwmarrin/discordgo"
 )
 
 //For commands
@@ -108,17 +113,17 @@ func registerCommands(p *Core.Parser) {
 	p.Register(&setPointsCmd)
 
 	warnCmd := Core.Command{
-		Name:			   "warnUser",
-		ArgumentCount:		2,
-		HelpMsg:			"Warns User",
-		UsageMsg:			"warn <meintion> <warn points>",
-		IsDisplayedOnHelp: 	true,
-		PermLevel:			1,
-		Category:			"Administrative",
-		FancifyInput:		true,
-		Command:			warnUser}
+		Name:              "warnUser",
+		ArgumentCount:     2,
+		HelpMsg:           "Warns User",
+		UsageMsg:          "warn <meintion> <warn points>",
+		IsDisplayedOnHelp: true,
+		PermLevel:         1,
+		Category:          "Administrative",
+		FancifyInput:      true,
+		Command:           warnUser}
 	p.Register(&warnCmd)
-		
+
 	setPermCmd := Core.Command{
 		Name:              "setPerm",
 		ArgumentCount:     2,
@@ -154,6 +159,18 @@ func registerCommands(p *Core.Parser) {
 		FancifyInput:      true,
 		Command:           points}
 	p.Register(&pointsCmd)
+
+	testCmd := Core.Command{
+		Name:              "test",
+		ArgumentCount:     0,
+		HelpMsg:           "MAIN TEST COMMAND FOR CODEAAAAAH",
+		UsageMsg:          "test",
+		IsDisplayedOnHelp: true,
+		PermLevel:         3,
+		Category:          "TEST COMMANDS",
+		FancifyInput:      true,
+		Command:           test}
+	p.Register(&testCmd)
 }
 
 func echo(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreate) string {
@@ -162,6 +179,53 @@ func echo(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreate)
 		retString = fmt.Sprintln(retString, args.Args[i])
 	}
 	return retString
+}
+
+func test(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreate) string {
+	//joinUserVoiceChannel(s, m.Author.ID)
+// Connect to a user's voice channel
+	vc, err := joinUserVoiceChannel(s, m.Author.ID)
+	if err != nil {
+		fmt.Printf("ERR is %s", err)
+		vc.Disconnect()
+		return "JOINING VOICE CHANNEL ERROR"
+	}
+	// download youtube vid
+	yt, err := youtubePy("https://www.youtube.com/watch?v=0Z8weY8MJxc")
+	if err != nil {
+		fmt.Printf("ERR is: %s", err)
+		vc.Disconnect()
+		return "YOUTUBEPY ERROR"
+	}
+	// Create opus stream
+	stream, err := convertToOpus(yt)
+	if err != nil {
+		fmt.Printf("ERR is %s", err)
+		vc.Disconnect()
+		return "CONVERTING TO OPUS ERROR"
+	}
+	for {
+		opus, err := readOpus(stream)
+		if err != nil {
+			if err == io.ErrUnexpectedEOF || err == io.EOF {
+				fmt.Printf("ERR is: %s", err)
+				vc.Disconnect()
+				break
+			} else if err != nil {
+				fmt.Printf("Weird error returned from readOpus: %s\n", err)
+				vc.Disconnect()
+				break
+			} else if len(opus) == 0 {
+				fmt.Printf("Weird error, read 0 bytes")
+				vc.Disconnect()
+				break
+			}
+			fmt.Println("Audio error: ", err)
+		}
+		vc.OpusSend <- opus
+	}
+	s.ChannelMessageSend(m.ChannelID, "You wanna listen to the musiiiiiic?")
+	return ""
 }
 
 func ping(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreate) string {
@@ -371,4 +435,96 @@ func points(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreat
 		return "Invalid mention!"
 	}
 	return "Done!"
+}
+
+func findUserVoiceState(session *discordgo.Session, userid string) (*discordgo.VoiceState, error) {
+	for _, guild := range session.State.Guilds {
+		for _, vs := range guild.VoiceStates {
+			if vs.UserID == userid {
+				return vs, nil
+			}
+		}
+	}
+	return nil, errors.New("Could not find user's voice state")
+}
+
+func joinUserVoiceChannel(session *discordgo.Session, userID string) (*discordgo.VoiceConnection, error) {
+	// Find a user's current voice channel
+	vs, err := findUserVoiceState(session, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Join the user's channel and start unmuted and deafened.
+	return session.ChannelVoiceJoin(vs.GuildID, vs.ChannelID, false, true)
+}
+
+func convertToOpus(rd io.Reader) (io.Reader, error) {
+
+	// Convert to a format that can be passed to dca-rs
+	ffmpeg := exec.Command("ffmpeg", "-i", "pipe:0", "-f", "s16le", "-ar", "48000", "-ac", "2", "pipe:1")
+	ffmpeg.Stdin = rd
+	ffmpegout, err := ffmpeg.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert to opus
+	dca := exec.Command("./dca-rs", "--raw", "-i", "pipe:0")
+	dca.Stdin = ffmpegout
+	dcaout, err := dca.StdoutPipe()
+	dcabuf := bufio.NewReaderSize(dcaout, 1024)
+	if err != nil {
+		return nil, err
+	}
+
+	// Start ffmpeg
+	err = ffmpeg.Start()
+	if err != nil {
+		return nil, err
+	}
+
+	// Start dca-rs
+	err = dca.Start()
+	if err != nil {
+		return nil, err
+	}
+
+	// Returns a stream of opus data
+	return dcabuf, nil
+}
+
+func youtubePy(url string) (io.Reader, error) {
+	ytdl := exec.Command("youtube-dl", "-f", "bestaudio", "-o", "-", url)
+	ytdlout, err := ytdl.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+	err = ytdl.Start()
+	if err != nil {
+		return nil, err
+	}
+	return ytdlout, nil
+}
+
+func readOpus(source io.Reader) ([]byte, error) {
+	var opuslen int16
+	err := binary.Read(source, binary.LittleEndian, &opuslen)
+	if err != nil {
+		if err == io.EOF || err == io.ErrUnexpectedEOF {
+			return nil, err
+		}
+		return nil, errors.New("ERR reading opus header")
+	}
+
+	var opusframe = make([]byte, opuslen)
+	err = binary.Read(source, binary.LittleEndian, &opusframe)
+	if err != nil {
+		if err == io.EOF || err == io.ErrUnexpectedEOF {
+			return nil, err
+		}
+		return nil, errors.New("ERR reading opus frame")
+	}
+
+	return opusframe, nil
 }

@@ -4,11 +4,12 @@ import (
 	Core "MrMcBaker/Core"
 	"flag"
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 var (
