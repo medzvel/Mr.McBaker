@@ -24,6 +24,7 @@ var (
 
 var badwords []string = []string{"fuck", "FUCK", "bitch", "BITCH"}
 var hellowords []string = []string{"hi", "HI", "hello", "HELLO"}
+var helloreactemojis []string = []string{"383729614066810880", "h", "e", "l", "l", "o"}
 
 func init() {
 	flag.StringVar(&Token, "t", "", "Bot Token")
@@ -95,12 +96,9 @@ func onStatusUpdate(s *discordgo.Session, p *discordgo.PresenceUpdate) {
 }
 
 func AddHelloReaction(s *discordgo.Session, m *discordgo.MessageCreate) {
-	s.MessageReactionAdd(m.ChannelID, m.ID, "383729614066810880")
-	s.MessageReactionAdd(m.ChannelID, m.ID, "h")
-	s.MessageReactionAdd(m.ChannelID, m.ID, "e")
-	s.MessageReactionAdd(m.ChannelID, m.ID, "l")
-	s.MessageReactionAdd(m.ChannelID, m.ID, "l")
-	s.MessageReactionAdd(m.ChannelID, m.ID, "o")
-	s.ChannelMessageSend(m.ChannelID, "WOULD ADD EMOJIS TO THE HELLO AND HI STRING123")
+	
+	for i := 0; i < len(helloreactemojis); i++ {
+		s.MessageReactionAdd(m.ChannelID, m.ID, helloreactemojis[i])
+	}
 
 }
