@@ -97,6 +97,7 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if strings.Contains(m.Content, badwords[i]) {
 			s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
 			Logger.MuteUser(m.Author.ID, Config.MuteTime)
+			s.ChannelMessageSend("369935120137977877", "TEST PM MESSAGE YLEO RATO IGINEBI HA?")
 		}
 	}
 	for i := 0; i < len(hellowords); i++ {
@@ -105,6 +106,9 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	}
 	if user.Muted == 1 {
+		s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
+	}
+	if len(m.Content) < 2 {
 		s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
 	}
 	Logger.UpdateEntryMsg(m.Author.ID, m)
