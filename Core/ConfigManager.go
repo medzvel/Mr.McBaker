@@ -48,6 +48,7 @@ func (c *Config) OutToFile(f string) {
 
 func MakeConfig() Config {
 	return Config{
+		Prefix:         "@",
 		Playing:        "Under Development!",
 		NlDatabaseFile: "db.json",
 		BootMessage:    "Bot is up!",
