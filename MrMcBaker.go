@@ -23,7 +23,7 @@ var (
 )
 
 var badwords []string = []string{"fuck", "FUCK", "bitch", "BITCH"}
-
+var hellowords []string = []string{"hi", "HI", "hello", "HELLO"}
 
 func init() {
 	flag.StringVar(&Token, "t", "", "Bot Token")
@@ -79,14 +79,10 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 			Logger.MuteUser(m.Author.ID, 1)
 		}
 	}
-	if strings.Contains(m.Content, "hello") || strings.Contains(m.Content, "hi") {
-		s.MessageReactionAdd(m.ChannelID, m.ID, "383729614066810880")
-		s.MessageReactionAdd(m.ChannelID, m.ID, "h")
-		s.MessageReactionAdd(m.ChannelID, m.ID, "e")
-		s.MessageReactionAdd(m.ChannelID, m.ID, "l")
-		s.MessageReactionAdd(m.ChannelID, m.ID, "l")
-		s.MessageReactionAdd(m.ChannelID, m.ID, "o")
-		s.ChannelMessageSend(m.ChannelID, "WOULD ADD EMOJIS TO THE HELLO AND HI STRING123")
+	for i := 0; i < len(hellowords); i++ {
+		if strings.Contains(m.Content, hellowords[i]) {
+			AddHelloReaction(s, m)
+		}
 	}
 	if user.Muted == 1 {
 		s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
@@ -96,4 +92,15 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 func onStatusUpdate(s *discordgo.Session, p *discordgo.PresenceUpdate) {
 	Logger.UpdateEntryPresence(p.Presence.User.ID, p)
+}
+
+func AddHelloReaction(s *discordgo.Session, m *discordgo.MessageCreate) {
+	s.MessageReactionAdd(m.ChannelID, m.ID, "383729614066810880")
+	s.MessageReactionAdd(m.ChannelID, m.ID, "h")
+	s.MessageReactionAdd(m.ChannelID, m.ID, "e")
+	s.MessageReactionAdd(m.ChannelID, m.ID, "l")
+	s.MessageReactionAdd(m.ChannelID, m.ID, "l")
+	s.MessageReactionAdd(m.ChannelID, m.ID, "o")
+	s.ChannelMessageSend(m.ChannelID, "WOULD ADD EMOJIS TO THE HELLO AND HI STRING123")
+
 }
