@@ -17,8 +17,8 @@ func registerCommands(p *Core.Parser) {
 		HelpMsg:           "A command to *echo* what you say",
 		UsageMsg:          "echo [message]",
 		IsDisplayedOnHelp: true,
-		PermLevel:         0,
-		Category:          "General",
+		PermLevel:         3,
+		Category:          "Administrative",
 		FancifyInput:      true,
 		Command:           echo}
 	p.Register(&echoCmd)

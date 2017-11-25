@@ -3,6 +3,7 @@ package main
 import (
 	Core "MrMcBaker/Core"
 	"flag"
+	//"time"
 	"fmt"
 	"os"
 	"os/signal"
@@ -26,6 +27,8 @@ var badwords []string = []string{"fuck", "FUCK", "bitch", "BITCH"}
 var hellowords []string = []string{"hi", "HI", "hello", "HELLO"}
 var helloreactemojis []string = []string{"383729614066810880", "h", "e", "l", "l", "o"}
 
+//var botstatus int = 0
+
 func init() {
 	flag.StringVar(&Token, "t", "", "Bot Token")
 	flag.StringVar(&CfgFile, "c", "", "Config file")
@@ -37,6 +40,7 @@ func init() {
 }
 
 func main() {
+
 	bot, err = discordgo.New("Bot " + Token)
 	if err != nil {
 		fmt.Println("Error creating Discord session:\n\t", err)
@@ -54,6 +58,21 @@ func main() {
 
 	fmt.Println("Bot is up and running!")
 	bot.UpdateStatus(0, Config.Playing)
+	//BOT STATUS UPDATER
+   /* statusupdater := time.NewTimer(time.Second * 5)
+    go func() {
+        <-statusupdater.C
+        if botstatus == 0 {
+        	bot.UpdateStatus(0, fmt.Sprintf("%shelp", Config.Prefix))
+        	botstatus = 1
+        	statusupdater.Reset(time.Second * 5)
+        } else {
+        	bot.UpdateStatus(0, Config.Playing)
+        	botstatus = 0
+        	statusupdater.Reset(time.Second * 5)
+        }
+
+    }()*/
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
