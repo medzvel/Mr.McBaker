@@ -3,10 +3,10 @@ package main
 import (
 	Core "MrMcBaker/Core"
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"os"
+	"errors"
 	"os/exec"
 	"strconv"
 	"encoding/binary"
@@ -160,17 +160,17 @@ func registerCommands(p *Core.Parser) {
 		Command:           points}
 	p.Register(&pointsCmd)
 
-	testCmd := Core.Command{
-		Name:              "test",
+	creditsCmd := Core.Command{
+		Name:              "credits",
 		ArgumentCount:     0,
-		HelpMsg:           "MAIN TEST COMMAND FOR CODEAAAAAH",
-		UsageMsg:          "test",
+		HelpMsg:           "Shows credits",
+		UsageMsg:          "credits",
 		IsDisplayedOnHelp: true,
-		PermLevel:         3,
-		Category:          "TEST COMMANDS",
+		PermLevel:         0,
+		Category:          "Miscellaneous",
 		FancifyInput:      true,
-		Command:           test}
-	p.Register(&testCmd)
+		Command:           credits}		
+	p.Register(&creditsCmd)
 }
 
 func echo(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreate) string {
@@ -181,52 +181,6 @@ func echo(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreate)
 	return retString
 }
 
-func test(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreate) string {
-	//joinUserVoiceChannel(s, m.Author.ID)
-// Connect to a user's voice channel
-	vc, err := joinUserVoiceChannel(s, m.Author.ID)
-	if err != nil {
-		fmt.Printf("ERR is %s", err)
-		vc.Disconnect()
-		return "JOINING VOICE CHANNEL ERROR"
-	}
-	// download youtube vid
-	yt, err := youtubePy("https://www.youtube.com/watch?v=0Z8weY8MJxc")
-	if err != nil {
-		fmt.Printf("ERR is: %s", err)
-		vc.Disconnect()
-		return "YOUTUBEPY ERROR"
-	}
-	// Create opus stream
-	stream, err := convertToOpus(yt)
-	if err != nil {
-		fmt.Printf("ERR is %s", err)
-		vc.Disconnect()
-		return "CONVERTING TO OPUS ERROR"
-	}
-	for {
-		opus, err := readOpus(stream)
-		if err != nil {
-			if err == io.ErrUnexpectedEOF || err == io.EOF {
-				fmt.Printf("ERR is: %s", err)
-				vc.Disconnect()
-				break
-			} else if err != nil {
-				fmt.Printf("Weird error returned from readOpus: %s\n", err)
-				vc.Disconnect()
-				break
-			} else if len(opus) == 0 {
-				fmt.Printf("Weird error, read 0 bytes")
-				vc.Disconnect()
-				break
-			}
-			fmt.Println("Audio error: ", err)
-		}
-		vc.OpusSend <- opus
-	}
-	s.ChannelMessageSend(m.ChannelID, "You wanna listen to the musiiiiiic?")
-	return ""
-}
 
 func ping(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreate) string {
 	return "Pong!"
@@ -268,6 +222,35 @@ func whoami(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreat
 	retEmbed.Fields = append(retEmbed.Fields, &discordgo.MessageEmbedField{Name: "Fancy points", Value: fmt.Sprintf("%v", user.FancyPoints), Inline: false})
 	retEmbed.Fields = append(retEmbed.Fields, &discordgo.MessageEmbedField{Name: "Warn points", Value: fmt.Sprintf("%v", user.Warns), Inline: false})
 	s.ChannelMessageSendEmbed(m.ChannelID, &retEmbed)
+	return fmt.Sprintln("Here you go ", m.Author.Mention(), "!")
+}
+
+func credits(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreate) string {
+	embed := &discordgo.MessageEmbed{
+	    Author:      &discordgo.MessageEmbedAuthor{},
+	    Color:       0x00ff00, // Green
+	    Description: "Mr.McBaker - Credits",
+	    Fields: []*discordgo.MessageEmbedField{
+	        &discordgo.MessageEmbedField{
+	            Name:   "Author",
+	            Value:  "Amagida",
+	            Inline: true,
+	        },
+	        &discordgo.MessageEmbedField{
+	            Name:   "My Owner Project",
+	            Value:  "Tikibaye RolePlay",
+	            Inline: true,
+	        },
+	    },
+	    Image: &discordgo.MessageEmbedImage{
+	        URL: "https://cdn.discordapp.com/app-icons/369935120137977877/22f44170060cea2413e6809c11f29e61.png",
+	    },
+	    Thumbnail: &discordgo.MessageEmbedThumbnail{
+	        URL: "https://cdn.discordapp.com/app-icons/369935120137977877/22f44170060cea2413e6809c11f29e61.png",
+	    },
+	    Title:     "I'm Mr.McBaker! Project Tikibaye official bot!",
+	}
+	s.ChannelMessageSendEmbed(m.ChannelID, embed)
 	return fmt.Sprintln("Here you go ", m.Author.Mention(), "!")
 }
 
@@ -435,96 +418,4 @@ func points(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreat
 		return "Invalid mention!"
 	}
 	return "Done!"
-}
-
-func findUserVoiceState(session *discordgo.Session, userid string) (*discordgo.VoiceState, error) {
-	for _, guild := range session.State.Guilds {
-		for _, vs := range guild.VoiceStates {
-			if vs.UserID == userid {
-				return vs, nil
-			}
-		}
-	}
-	return nil, errors.New("Could not find user's voice state")
-}
-
-func joinUserVoiceChannel(session *discordgo.Session, userID string) (*discordgo.VoiceConnection, error) {
-	// Find a user's current voice channel
-	vs, err := findUserVoiceState(session, userID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Join the user's channel and start unmuted and deafened.
-	return session.ChannelVoiceJoin(vs.GuildID, vs.ChannelID, false, true)
-}
-
-func convertToOpus(rd io.Reader) (io.Reader, error) {
-
-	// Convert to a format that can be passed to dca-rs
-	ffmpeg := exec.Command("ffmpeg", "-i", "pipe:0", "-f", "s16le", "-ar", "48000", "-ac", "2", "pipe:1")
-	ffmpeg.Stdin = rd
-	ffmpegout, err := ffmpeg.StdoutPipe()
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert to opus
-	dca := exec.Command("./dca-rs", "--raw", "-i", "pipe:0")
-	dca.Stdin = ffmpegout
-	dcaout, err := dca.StdoutPipe()
-	dcabuf := bufio.NewReaderSize(dcaout, 1024)
-	if err != nil {
-		return nil, err
-	}
-
-	// Start ffmpeg
-	err = ffmpeg.Start()
-	if err != nil {
-		return nil, err
-	}
-
-	// Start dca-rs
-	err = dca.Start()
-	if err != nil {
-		return nil, err
-	}
-
-	// Returns a stream of opus data
-	return dcabuf, nil
-}
-
-func youtubePy(url string) (io.Reader, error) {
-	ytdl := exec.Command("youtube-dl", "-f", "bestaudio", "-o", "-", url)
-	ytdlout, err := ytdl.StdoutPipe()
-	if err != nil {
-		return nil, err
-	}
-	err = ytdl.Start()
-	if err != nil {
-		return nil, err
-	}
-	return ytdlout, nil
-}
-
-func readOpus(source io.Reader) ([]byte, error) {
-	var opuslen int16
-	err := binary.Read(source, binary.LittleEndian, &opuslen)
-	if err != nil {
-		if err == io.EOF || err == io.ErrUnexpectedEOF {
-			return nil, err
-		}
-		return nil, errors.New("ERR reading opus header")
-	}
-
-	var opusframe = make([]byte, opuslen)
-	err = binary.Read(source, binary.LittleEndian, &opusframe)
-	if err != nil {
-		if err == io.EOF || err == io.ErrUnexpectedEOF {
-			return nil, err
-		}
-		return nil, errors.New("ERR reading opus frame")
-	}
-
-	return opusframe, nil
 }

@@ -22,6 +22,9 @@ var (
 	err     error
 )
 
+var badwords []string = []string{"fuck", "FUCK", "bitch", "BITCH"}
+
+
 func init() {
 	flag.StringVar(&Token, "t", "", "Bot Token")
 	flag.StringVar(&CfgFile, "c", "", "Config file")
@@ -61,6 +64,7 @@ func main() {
 
 func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//discordgo.Channel().GuildID
+	user, _ := Logger.GetInfo(m.Author.ID)
 	if m.Author.ID == s.State.User.ID {
 		Logger.UpdateEntryMsg(m.Author.ID, m)
 		return
@@ -69,7 +73,24 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if strings.Contains(m.Content, "🅱") {
 		s.MessageReactionAdd(m.ChannelID, m.ID, "🅱")
 	}
-
+	for i := 0; i < len(badwords); i++ {
+		if strings.Contains(m.Content, badwords[i]) {
+			s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
+			Logger.MuteUser(m.Author.ID, 1)
+		}
+	}
+	if strings.Contains(m.Content, "hello") || strings.Contains(m.Content, "hi") {
+		s.MessageReactionAdd(m.ChannelID, m.ID, "383729614066810880")
+		s.MessageReactionAdd(m.ChannelID, m.ID, "h")
+		s.MessageReactionAdd(m.ChannelID, m.ID, "e")
+		s.MessageReactionAdd(m.ChannelID, m.ID, "l")
+		s.MessageReactionAdd(m.ChannelID, m.ID, "l")
+		s.MessageReactionAdd(m.ChannelID, m.ID, "o")
+		s.ChannelMessageSend(m.ChannelID, "WOULD ADD EMOJIS TO THE HELLO AND HI STRING123")
+	}
+	if user.Muted == 1 {
+		s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
+	}
 	Logger.UpdateEntryMsg(m.Author.ID, m)
 }
 

@@ -16,6 +16,7 @@ type UserInfo struct {
 	PermLevel   int
 	FancyPoints int
 	Warns   	int
+	Muted		int
 }
 
 type Logger struct {
@@ -33,7 +34,8 @@ func (l *Logger) MakeUser(id string) {
 			LastMessage: "Last message not recorded",
 			LastGame:    "Last played game not recorded",
 			PermLevel:   0,
-			Warns:		 0}
+			Warns:		 0,
+			Muted:		 0}
 	}
 }
 
@@ -42,7 +44,7 @@ func (l *Logger) GetInfo(id string) (*UserInfo, int) {
 	if exists {
 		return user, 0
 	} else {
-		return &UserInfo{time.Now(), "invalid user", "chan", "invalid game", -1, -1, -1}, 1
+		return &UserInfo{time.Now(), "invalid user", "chan", "invalid game", -1, -1, -1, -1}, 1
 	}
 }
 
@@ -55,6 +57,12 @@ func (l *Logger) SetPerm(id string, lv int) {
 func (l *Logger) SetPoints(id string, p int) {
 	if l.EntryExists(id) {
 		l.users[id].FancyPoints = p
+	}
+}
+
+func (l *Logger) MuteUser(id string, p int) {
+	if l.EntryExists(id) {
+		l.users[id].Muted = p
 	}
 }
 
