@@ -76,7 +76,7 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	for i := 0; i < len(badwords); i++ {
 		if strings.Contains(m.Content, badwords[i]) {
 			s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
-			Logger.MuteUser(m.Author.ID, 1)
+			Logger.MuteUser(m.Author.ID, Config.MuteTime)
 		}
 	}
 	for i := 0; i < len(hellowords); i++ {

@@ -2,14 +2,9 @@ package main
 
 import (
 	Core "MrMcBaker/Core"
-	"bufio"
 	"fmt"
-	"io"
 	"os"
-	"errors"
-	"os/exec"
 	"strconv"
-	"encoding/binary"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -238,7 +233,7 @@ func credits(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCrea
 	        },
 	        &discordgo.MessageEmbedField{
 	            Name:   "My Owner Project",
-	            Value:  "Tikibaye RolePlay",
+	            Value:  Config.ProjectName,
 	            Inline: true,
 	        },
 	    },
@@ -248,7 +243,7 @@ func credits(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCrea
 	    Thumbnail: &discordgo.MessageEmbedThumbnail{
 	        URL: "https://cdn.discordapp.com/app-icons/369935120137977877/22f44170060cea2413e6809c11f29e61.png",
 	    },
-	    Title:     "I'm Mr.McBaker! Project Tikibaye official bot!",
+	    Title:     "Hello, I'm Mr.McBaker!",
 	}
 	s.ChannelMessageSendEmbed(m.ChannelID, embed)
 	return fmt.Sprintln("Here you go ", m.Author.Mention(), "!")

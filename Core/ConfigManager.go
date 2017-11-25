@@ -14,6 +14,8 @@ type Config struct {
 	AnnouncementChannelIDs []string
 	BootMessage            string
 	ClosingMessage         string
+	ProjectName			   string
+	MuteTime			   int
 }
 
 func (c *Config) readFromFile(f string) {
@@ -49,7 +51,9 @@ func MakeConfig() Config {
 		Playing:        "Under Development!",
 		NlDatabaseFile: "db.json",
 		BootMessage:    "Bot is up!",
-		ClosingMessage: "Bot is closing!"}
+		ClosingMessage: "Bot is closing!",
+		ProjectName:	"Mr.McBaker's Official Server",
+		MuteTime:		5}
 }
 
 func (c *Config) Init(file string) (Parser, Logger) {
