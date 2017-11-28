@@ -7,7 +7,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	"github.com/medzvel/MrMcBaker/Core"
+	"github.com/medzvel/Mr.McBaker/Core"
 )
 
 //For commands
