@@ -436,3 +436,4 @@ func points(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreat
 	}
 	return "Done!"
 }
+
