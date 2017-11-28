@@ -1,12 +1,11 @@
 package Core
 
 import (
-	_ "fmt"
-	"github.com/bwmarrin/discordgo"
 	"math/rand"
-	_ "strconv"
 	"strings"
 	"time"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 /*

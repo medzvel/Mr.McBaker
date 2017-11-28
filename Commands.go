@@ -1,11 +1,13 @@
 package main
 
 import (
-	Core "MrMcBaker/Core"
 	"fmt"
 	"os"
 	"strconv"
+
 	"github.com/bwmarrin/discordgo"
+
+	"github.com/medzvel/Mr.McBaker/Core"
 )
 
 //For commands

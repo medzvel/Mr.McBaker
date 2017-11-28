@@ -1,16 +1,17 @@
 package main
 
 import (
-	Core "MrMcBaker/Core"
 	"flag"
-	"regexp"
 	"fmt"
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
+
+	"github.com/medzvel/Mr.McBaker/Core"
 )
 
 var (
