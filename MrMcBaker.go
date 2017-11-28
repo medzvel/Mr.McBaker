@@ -3,7 +3,7 @@ package main
 import (
 	Core "MrMcBaker/Core"
 	"flag"
-	//"time"
+	"regexp"
 	"fmt"
 	"os"
 	"os/signal"
@@ -23,9 +23,24 @@ var (
 	err     error
 )
 
-var badwords []string = []string{"fuck", "FUCK", "bitch", "BITCH"}
-var hellowords []string = []string{"hi", "HI", "hello", "HELLO"}
-var helloreactemojis []string = []string{"383729614066810880", "h", "e", "l", "l", "o"}
+var badwords = []string{
+	`\bfuck\b`, 
+	`\bFUCK\b`, 
+	`\bbitch\b`, 
+	`\bBITCH\b`, 
+	`\bFuck\b`, 
+	`\bBitch\b`,
+}
+var hellowords = []string{
+    `\bhi\b`,
+    `\bHI\b`,
+    `\bhello\b`,
+    `\bHELLO\b`,
+    `\bHi\b`,
+    `\bHello\b`,
+}
+
+var helloreactemojis []string = []string{"🖐", "🇭", "🇮"}
 
 //var botstatus int = 0
 
@@ -49,7 +64,7 @@ func main() {
 
 	bot.AddHandler(onMessage)
 	bot.AddHandler(onStatusUpdate)
-
+	bot.AddHandler(onJoin)
 	err = bot.Open()
 	if err != nil {
 		fmt.Println("Error opening connection:\n\t", err)
@@ -58,22 +73,6 @@ func main() {
 
 	fmt.Println("Bot is up and running!")
 	bot.UpdateStatus(0, Config.Playing)
-	//BOT STATUS UPDATER
-   /* statusupdater := time.NewTimer(time.Second * 5)
-    go func() {
-        <-statusupdater.C
-        if botstatus == 0 {
-        	bot.UpdateStatus(0, fmt.Sprintf("%shelp", Config.Prefix))
-        	botstatus = 1
-        	statusupdater.Reset(time.Second * 5)
-        } else {
-        	bot.UpdateStatus(0, Config.Playing)
-        	botstatus = 0
-        	statusupdater.Reset(time.Second * 5)
-        }
-
-    }()*/
-
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
@@ -82,29 +81,45 @@ func main() {
 	Config.End(CfgFile, &Parser, &Logger)
 }
 
+func onJoin(s *discordgo.Session, event *discordgo.GuildMemberAdd) {
+	ch, err := s.UserChannelCreate(event.Member.User.ID)
+	if err != nil {
+		return
+	}
+	s.ChannelMessageSend(ch.ID,"WELCOME!")
+}
+
 func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
-	//discordgo.Channel().GuildID
+	if m.Author.Bot {
+		return
+	}
 	user, _ := Logger.GetInfo(m.Author.ID)
+	ch, err := s.UserChannelCreate(m.Author.ID)
+	if err != nil {
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Can't create PM Channel for user. ERROR: %s", err))
+		return
+	}
 	if m.Author.ID == s.State.User.ID {
 		Logger.UpdateEntryMsg(m.Author.ID, m)
 		return
 	}
+
 	s.ChannelMessageSend(m.ChannelID, Parser.Execute(s, m))
 	if strings.Contains(m.Content, "🅱") {
 		s.MessageReactionAdd(m.ChannelID, m.ID, "🅱")
 	}
-	for i := 0; i < len(badwords); i++ {
-		if strings.Contains(m.Content, badwords[i]) {
-			s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
-			Logger.MuteUser(m.Author.ID, Config.MuteTime)
-			s.ChannelMessageSend("369935120137977877", "TEST PM MESSAGE YLEO RATO IGINEBI HA?")
-		}
+	/* BAD WORD DETECTOR */
+	if isBadWord(m.Message.Content) {
+		s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
+		s.ChannelMessageSend(ch.ID, "You can't use bad words!")
 	}
-	for i := 0; i < len(hellowords); i++ {
-		if strings.Contains(m.Content, hellowords[i]) {
-			AddHelloReaction(s, m)
-		}
+
+	if isHello(m.Message.Content) {
+		AddHelloReaction(s, m)
 	}
+	//
+	/* HELLO WORD DETECTOR */ 
+
 	if user.Muted == 1 {
 		s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
 	}
@@ -119,9 +134,34 @@ func onStatusUpdate(s *discordgo.Session, p *discordgo.PresenceUpdate) {
 }
 
 func AddHelloReaction(s *discordgo.Session, m *discordgo.MessageCreate) {
-	
+
 	for i := 0; i < len(helloreactemojis); i++ {
-		s.MessageReactionAdd(m.ChannelID, m.ID, helloreactemojis[i])
+		err := s.MessageReactionAdd(m.ChannelID, m.ID, helloreactemojis[i])
+		if err != nil {
+			s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("ERROR HAPPENED WHILE ADDING REACTION TO MESSAGE. ERROR: `%s`! `EMOJI ID: %s`", err, helloreactemojis[i]))
+		}
 	}
 
+}
+
+func isHello(message string) bool {
+    for i := 0; i < len(hellowords); i++ {
+        re := regexp.MustCompile(hellowords[i])
+        matches := re.FindAllString(message, -1)
+        if len(matches) > 0 {
+            return true
+        }
+    }
+    return false
+}
+
+func isBadWord(message string) bool {
+    for i := 0; i < len(badwords); i++ {
+        re := regexp.MustCompile(badwords[i])
+        matches := re.FindAllString(message, -1)
+        if len(matches) > 0 {
+            return true
+        }
+    }
+    return false	
 }

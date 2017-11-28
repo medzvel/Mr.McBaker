@@ -200,6 +200,12 @@ func fucc(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreate)
 }
 
 func whoami(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreate) string {
+	s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
+	ch, err := s.UserChannelCreate(m.Author.ID)
+	if err != nil {
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Can't create PM Channel for user. ERROR: %s", err))
+		return ""
+	}
 	author := discordgo.MessageEmbedAuthor{
 		Name:    fmt.Sprintln("User info of: ", m.Author.String()),
 		IconURL: m.Author.AvatarURL("")}
@@ -216,11 +222,17 @@ func whoami(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreat
 	retEmbed.Fields = append(retEmbed.Fields, &discordgo.MessageEmbedField{Name: "Permission level", Value: fmt.Sprintf("%v", user.PermLevel), Inline: false})
 	retEmbed.Fields = append(retEmbed.Fields, &discordgo.MessageEmbedField{Name: "Fancy points", Value: fmt.Sprintf("%v", user.FancyPoints), Inline: false})
 	retEmbed.Fields = append(retEmbed.Fields, &discordgo.MessageEmbedField{Name: "Warn points", Value: fmt.Sprintf("%v", user.Warns), Inline: false})
-	s.ChannelMessageSendEmbed(m.ChannelID, &retEmbed)
-	return fmt.Sprintln("Here you go ", m.Author.Mention(), "!")
+	s.ChannelMessageSendEmbed(ch.ID, &retEmbed)
+	return ""//fmt.Sprintln("Here you go ", m.Author.Mention(), "!")
 }
 
 func credits(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreate) string {
+	s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
+	ch, err := s.UserChannelCreate(m.Author.ID)
+	if err != nil {
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Can't create PM Channel for user. ERROR: %s", err))
+		return ""
+	}
 	embed := &discordgo.MessageEmbed{
 	    Author:      &discordgo.MessageEmbedAuthor{},
 	    Color:       0x00ff00, // Green
@@ -245,11 +257,17 @@ func credits(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCrea
 	    },
 	    Title:     "Hello, I'm Mr.McBaker!",
 	}
-	s.ChannelMessageSendEmbed(m.ChannelID, embed)
-	return fmt.Sprintln("Here you go ", m.Author.Mention(), "!")
+	s.ChannelMessageSendEmbed(ch.ID, embed)
+	return ""//fmt.Sprintln("Here you go ", m.Author.Mention(), "!")
 }
 
 func seen(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreate) string {
+	s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
+	ch, err := s.UserChannelCreate(m.Author.ID)
+	if err != nil {
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Can't create PM Channel for user. ERROR: %s", err))
+		return ""
+	}
 	if len(m.Mentions) > 0 {
 		if Logger.EntryExists(m.Mentions[0].ID) {
 			user, _ := Logger.GetInfo(m.Mentions[0].ID)
@@ -281,16 +299,18 @@ func seen(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreate)
 			retEmbed.Fields = append(retEmbed.Fields, &discordgo.MessageEmbedField{Name: "Permission level", Value: fmt.Sprintf("%v", user.PermLevel), Inline: false})
 			retEmbed.Fields = append(retEmbed.Fields, &discordgo.MessageEmbedField{Name: "Fancy points", Value: fmt.Sprintf("%v", user.FancyPoints), Inline: false})
 			retEmbed.Fields = append(retEmbed.Fields, &discordgo.MessageEmbedField{Name: "Warn points", Value: fmt.Sprintf("%v", user.Warns), Inline: false})
-			_, err := s.ChannelMessageSendEmbed(m.ChannelID, &retEmbed)
+			_, err := s.ChannelMessageSendEmbed(ch.ID, &retEmbed)
 			if err != nil {
 				fmt.Println(err)
 			}
-			return fmt.Sprintln("Here you go ", m.Author.Mention(), "!")
+			return ""
 		} else {
-			return "User not yet registered."
+			s.ChannelMessageSend(ch.ID, "User is not registered!")
+			return ""
 		}
 	} else {
-		return "Invalid mention!"
+		s.ChannelMessageSend(ch.ID, "Invalid mention!")
+		return ""
 	}
 	return "error?"
 }
