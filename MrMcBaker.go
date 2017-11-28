@@ -1,7 +1,7 @@
 package main
 
 import (
-	Core "MrMcBaker/Core"
+	"MrMcBaker/Core"
 	"flag"
 	"regexp"
 	"fmt"
@@ -11,6 +11,8 @@ import (
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
+
+	"github.com/medzvel/MrMcBaker/Core"
 )
 
 var (
@@ -19,6 +21,7 @@ var (
 	Config  Core.Config
 	Parser  Core.Parser
 	Logger  Core.Logger
+	//Functions Core.Functions
 	bot     *discordgo.Session
 	err     error
 )
@@ -127,6 +130,8 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
 	}
 	Logger.UpdateEntryMsg(m.Author.ID, m)
+	SendDeveloperMessage(s, "HELLO DEVELOPER!")
+	//s.ChannelMessageSend(ch.ID, fmt.Sprintf("YOUR ID IS %s", m.Author.ID))
 }
 
 func onStatusUpdate(s *discordgo.Session, p *discordgo.PresenceUpdate) {
