@@ -168,6 +168,18 @@ func registerCommands(p *Core.Parser) {
 		FancifyInput:      true,
 		Command:           credits}		
 	p.Register(&creditsCmd)
+
+	suggestionsCmd := Core.Command{
+		Name:				"suggestion",
+		ArgumentCount:		1,
+		HelpMsg:			"Send your suggestions to the community leaders!",
+		UsageMsg:			"suggestions <text>",
+		IsDisplayedOnHelp:	true,
+		PermLevel:			0,
+		Category:			"Information",
+		FancifyInput:		true,
+		Command:			suggestion}
+	p.Register(&suggestionsCmd)	
 }
 
 func echo(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreate) string {
@@ -178,6 +190,14 @@ func echo(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreate)
 	return retString
 }
 
+func suggestion(args string, s *discordgo.Session,m *discordgo.MessageCreate) string {
+//	var suggestionstring string
+//	for i := 1; len(args.Args) > i; i++ {
+//		suggestionstring = fmt.Sprintln(suggestionstring, args.Args[i])
+//	}	
+	SendSuggestionsMessage(s, fmt.Sprintf("User **%s** made suggestion for the server!\nSuggestion: %s", m.Author.String(), args))	
+	return ""
+}
 
 func ping(args Core.Arguments, s *discordgo.Session, m *discordgo.MessageCreate) string {
 	return "Pong!"

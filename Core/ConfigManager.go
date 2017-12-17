@@ -15,6 +15,7 @@ type Config struct {
 	BootMessage            string
 	ClosingMessage         string
 	ProjectName			   string
+	LanguageData		   string
 	MuteTime			   int
 }
 
@@ -54,6 +55,7 @@ func MakeConfig() Config {
 		BootMessage:    "Bot is up!",
 		ClosingMessage: "Bot is closing!",
 		ProjectName:	"Mr.McBaker's Official Server",
+		LanguageData:	"./lang",
 		MuteTime:		5}
 }
 

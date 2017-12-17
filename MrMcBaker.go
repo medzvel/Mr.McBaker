@@ -1,9 +1,7 @@
 package main
 
 import (
-	"MrMcBaker/Core"
 	"flag"
-	"regexp"
 	"fmt"
 	"os"
 	"os/signal"
@@ -18,6 +16,7 @@ import (
 var (
 	Token   string
 	CfgFile string
+	LangFile string
 	Config  Core.Config
 	Parser  Core.Parser
 	Logger  Core.Logger
@@ -52,14 +51,14 @@ func init() {
 	flag.StringVar(&CfgFile, "c", "", "Config file")
 	flag.Parse()
 
-	Parser, Logger = Config.Init(CfgFile)
+	Parser, Logger = Config.Init("config")
 	registerCommands(&Parser)
 	Parser.LinkLogger(&Logger)
 }
 
 func main() {
 
-	bot, err = discordgo.New("Bot " + Token)
+	bot, err = discordgo.New("Bot " + "MzkyMDk0NTczNjUzOTE3NzA2.DRiOJw.UULvYvaFgxlF5EN03DpTnm9Nhrs")
 	if err != nil {
 		fmt.Println("Error creating Discord session:\n\t", err)
 		return
@@ -89,7 +88,7 @@ func onJoin(s *discordgo.Session, event *discordgo.GuildMemberAdd) {
 	if err != nil {
 		return
 	}
-	s.ChannelMessageSend(ch.ID,"WELCOME!")
+	s.ChannelMessageSend(ch.ID, "Welcome to the Discord-Channel of the Tropical Island Roleplay SA-MP community.\nBy joining our Discord-Channel we would friendly request you to change your channel-username to your in-game name.Also we would appreciate it if you register a forum-account on www.tikibaye.com to get a better touch with our community.And read the community rules in the `annoncements` sub-section here in our Discord-Channel or on our forums.Enjoy your stay in the community!")
 }
 
 func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -130,7 +129,7 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
 	}
 	Logger.UpdateEntryMsg(m.Author.ID, m)
-	SendDeveloperMessage(s, "HELLO DEVELOPER!")
+	//SendDeveloperMessage(s, "HELLO DEVELOPER!")
 	//s.ChannelMessageSend(ch.ID, fmt.Sprintf("YOUR ID IS %s", m.Author.ID))
 }
 
@@ -147,26 +146,4 @@ func AddHelloReaction(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	}
 
-}
-
-func isHello(message string) bool {
-    for i := 0; i < len(hellowords); i++ {
-        re := regexp.MustCompile(hellowords[i])
-        matches := re.FindAllString(message, -1)
-        if len(matches) > 0 {
-            return true
-        }
-    }
-    return false
-}
-
-func isBadWord(message string) bool {
-    for i := 0; i < len(badwords); i++ {
-        re := regexp.MustCompile(badwords[i])
-        matches := re.FindAllString(message, -1)
-        if len(matches) > 0 {
-            return true
-        }
-    }
-    return false	
 }
