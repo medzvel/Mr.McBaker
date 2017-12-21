@@ -59,7 +59,7 @@ func init() {
 
 func main() {
 
-	bot, err = discordgo.New("Bot " + "MzkyMDk0NTczNjUzOTE3NzA2.DRiOJw.UULvYvaFgxlF5EN03DpTnm9Nhrs")
+	bot, err = discordgo.New("Bot " + "")
 	if err != nil {
 		fmt.Println("Error creating Discord session:\n\t", err)
 		return
